@@ -52,19 +52,16 @@ import {
     };
   }
 
-  function loadProducts(){
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (!saved) return seedProducts();
+async all() {
 
-      const parsed = JSON.parse(saved);
-      if (!Array.isArray(parsed)) return seedProducts();
+    const snapshot = await getDocs(productsCollection);
 
-      return normalizeProducts(parsed);
-    } catch (error) {
-      return seedProducts();
-    }
-  }
+    return snapshot.docs.map(doc => ({
+        firestoreId: doc.id,
+        ...doc.data()
+    }));
+
+}
 
   function saveProducts(products){
     const normalized = normalizeProducts(products);
@@ -110,9 +107,25 @@ import {
     return clone(loadProducts());
   }
 
-  function find(id){
-    return all().find(product => product.id === id) || null;
-  }
+async find(id) {
+
+    const q = query(
+        productsCollection,
+        where("id", "==", id)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) return null;
+
+    const document = snapshot.docs[0];
+
+    return {
+        firestoreId: document.id,
+        ...document.data()
+    };
+
+}
 
   function categories(){
     return [...new Set(all().map(product => product.category).filter(Boolean))].sort();
@@ -120,37 +133,38 @@ import {
 
 
 
-async function add(product) {
-
-    const normalized = normalizeProduct(product);
+async add(product) {
 
     const docRef = await addDoc(
-        collection(db, "products"),
-        normalized
+        productsCollection,
+        product
     );
+
+    return docRef.id;
+
+}
 
     return {
         firestoreId: docRef.id,
         ...normalized
     };
 }
-  function update(id, product){
-    const products = loadProducts();
-    const index = products.findIndex(item => item.id === id);
+async update(firestoreId, product) {
 
-    if (index === -1) {
-      throw new Error('Product not found.');
-    }
+    await updateDoc(
+        doc(db, "products", firestoreId),
+        product
+    );
 
-    const normalized = normalizeProduct({ ...products[index], ...product, id });
-    products[index] = normalized;
-    return saveProducts(products)[index];
-  }
+}
 
-  function remove(ids){
-    const selected = new Set(Array.isArray(ids) ? ids : [ids]);
-    return saveProducts(loadProducts().filter(product => !selected.has(product.id)));
-  }
+async remove(firestoreId) {
+
+    await deleteDoc(
+        doc(db, "products", firestoreId)
+    );
+
+}
 
   function onChange(callback){
     const handler = event => {
