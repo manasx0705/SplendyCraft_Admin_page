@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Product - SplendyCraft Admin</title>
+<meta name="description" content="Create a SplendyCraft product record.">
+<link rel="icon" type="image/png" href="./logo.jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+body{background:var(--ivory)}
+.add-shell{min-height:100vh;padding:8.2rem 4.5rem 7rem}
+.add-header{display:flex;justify-content:space-between;gap:2rem;align-items:end;margin-bottom:2.4rem}
+.add-kicker{font-size:0.62rem;letter-spacing:0.34em;text-transform:uppercase;color:var(--rust);margin-bottom:0.9rem}
+.add-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2.5rem,5vw,4.2rem);font-weight:300;line-height:1.05;color:var(--dark);margin-bottom:1rem}
+.add-title em{font-style:italic;color:var(--rust)}
+.add-copy{max-width:620px;font-size:1rem;line-height:1.78;font-weight:300;color:var(--brown)}
+.product-form{
+  position:relative;background:var(--cream);border:1px solid rgba(201,151,58,0.18);padding:2rem;
+  box-shadow:0 24px 70px rgba(90,52,16,0.1);
+}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem 1.3rem}
+.field{display:flex;flex-direction:column;gap:0.42rem}
+.field.full{grid-column:1/-1}
+.field label{font-size:0.64rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--rust);font-weight:500}
+.field input,.field textarea,.field select{
+  width:100%;border:1px solid rgba(160,69,26,0.22);background:rgba(255,255,255,0.66);color:var(--dark);
+  font-family:'Jost',sans-serif;font-size:0.95rem;font-weight:300;padding:0.8rem 0.85rem;transition:border-color 0.24s,box-shadow 0.24s;
+}
+.field textarea{min-height:112px;resize:vertical;line-height:1.55}
+.field input[readonly]{background:rgba(232,224,210,0.5);color:rgba(90,52,16,0.72)}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,58,0.14)}
+.field.invalid input,.field.invalid textarea,.field.invalid select{border-color:var(--rust);box-shadow:0 0 0 3px rgba(160,69,26,0.12)}
+.field-error{display:none;font-size:0.78rem;color:var(--rust);font-weight:400}
+.field.invalid .field-error{display:block}
+.custom-category[hidden]{display:none}
+.image-editor{grid-column:1/-1;border:1px solid rgba(201,151,58,0.18);background:rgba(253,248,240,0.58);padding:1rem}
+.image-drop{
+  border:1px dashed rgba(160,69,26,0.34);background:rgba(253,248,240,0.72);padding:1.25rem;text-align:center;cursor:pointer;
+  transition:background 0.24s,border-color 0.24s;
+}
+.image-drop.dragging{background:rgba(201,151,58,0.12);border-color:var(--gold)}
+.image-drop strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.28rem;font-weight:400;color:var(--dark);margin-bottom:0.35rem}
+.image-drop span{font-size:0.84rem;color:var(--brown);font-weight:300}
+.image-input{display:none}
+.image-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:0.9rem;margin-top:1rem}
+.image-item{background:var(--ivory);border:1px solid rgba(160,69,26,0.16);padding:0.55rem;cursor:grab}
+.image-item.drag-over{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,58,0.14)}
+.image-preview{height:104px;background:#EFE6D4;overflow:hidden;margin-bottom:0.55rem}
+.image-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.image-tools{display:flex;gap:0.4rem}
+.image-tools button{
+  flex:1;min-height:32px;border:1px solid rgba(160,69,26,0.18);background:transparent;color:var(--brown);font-family:'Jost',sans-serif;
+  font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;
+}
+.image-tools button:hover{border-color:var(--rust);color:var(--rust)}
+.image-tools .primary{background:rgba(201,151,58,0.13);border-color:rgba(201,151,58,0.32)}
+.image-error{display:none;font-size:0.78rem;color:var(--rust);font-weight:400;margin-top:0.55rem}
+.form-message{display:none;margin-top:1rem;padding:0.9rem 1rem;border-left:3px solid var(--rust);background:rgba(160,69,26,0.08);font-size:0.88rem;color:var(--brown)}
+.form-message.show{display:block}
+.form-actions{display:flex;justify-content:flex-end;gap:0.8rem;margin-top:1.6rem;flex-wrap:wrap}
+.primary-action,.ghost-action{
+  border:1px solid transparent;font-family:'Jost',sans-serif;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:500;
+  min-height:44px;padding:0.75rem 1.25rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:0.55rem;
+  transition:transform 0.25s,box-shadow 0.25s,background 0.25s,color 0.25s,border-color 0.25s;
+}
+.primary-action{background:var(--gold);border-color:var(--gold);color:var(--ivory);box-shadow:0 14px 34px rgba(201,151,58,0.28)}
+.primary-action:hover{transform:translateY(-2px);box-shadow:0 20px 42px rgba(201,151,58,0.36)}
+.ghost-action{background:rgba(253,248,240,0.72);border-color:rgba(160,69,26,0.22);color:var(--brown)}
+.ghost-action:hover{border-color:var(--gold);color:var(--rust)}
+@media(max-width:880px){
+  .add-shell{padding:7rem 1.5rem 6rem}
+  .add-header{display:block}
+  .product-form{padding:1.35rem}
+  .form-grid{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .primary-action,.ghost-action{width:100%}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-logo">Splendy<em>Craft</em></div>
+  <ul class="nav-links">
+    <li><a href="admin.html">Admin</a></li>
+    <li><a href="products.html">Products</a></li>
+  </ul>
+</nav>
+
+<main class="add-shell">
+  <header class="add-header">
+    <div>
+      <div class="add-kicker">Internal Product Portal</div>
+      <h1 class="add-title">Add <em>Product</em></h1>
+      <p class="add-copy">Create a product record for the public collection. The product ID is generated from the name and saved automatically.</p>
+    </div>
+  </header>
+
+  <form class="product-form" id="addForm" novalidate>
+    <div class="form-grid">
+      <div class="field" data-field="name">
+        <label for="name">Product Name</label>
+        <input id="name" name="name" type="text" autocomplete="off">
+        <span class="field-error">Product name is required.</span>
+      </div>
+      <div class="field">
+        <label for="generatedId">Generated ID</label>
+        <input id="generatedId" type="text" readonly value="product">
+      </div>
+      <div class="field" data-field="category">
+        <label for="category">Category</label>
+        <select id="category" name="category"></select>
+        <input class="custom-category" id="customCategory" type="text" placeholder="Enter custom category" hidden>
+        <span class="field-error">Category is required.</span>
+      </div>
+      <div class="field" data-field="availability">
+        <label for="availability">Availability</label>
+        <input id="availability" name="availability" type="text">
+        <span class="field-error">Availability is required.</span>
+      </div>
+      <div class="field full" data-field="shortDescription">
+        <label for="shortDescription">Short Description</label>
+        <textarea id="shortDescription" name="shortDescription"></textarea>
+        <span class="field-error">Short description is required.</span>
+      </div>
+      <div class="field full" data-field="longDescription">
+        <label for="longDescription">Long Description</label>
+        <textarea id="longDescription" name="longDescription"></textarea>
+        <span class="field-error">Long description is required.</span>
+      </div>
+      <div class="field" data-field="material">
+        <label for="material">Material</label>
+        <input id="material" name="material" type="text">
+        <span class="field-error">Material is required.</span>
+      </div>
+      <div class="field" data-field="dimensions">
+        <label for="dimensions">Dimensions</label>
+        <input id="dimensions" name="dimensions" type="text">
+        <span class="field-error">Dimensions are required.</span>
+      </div>
+      <div class="field" data-field="color">
+        <label for="color">Color</label>
+        <input id="color" name="color" type="text">
+        <span class="field-error">Color is required.</span>
+      </div>
+      <div class="field" data-field="craftsmanship">
+        <label for="craftsmanship">Craftsmanship</label>
+        <input id="craftsmanship" name="craftsmanship" type="text">
+        <span class="field-error">Craftsmanship is required.</span>
+      </div>
+      <div class="field full" data-field="care">
+        <label for="care">Care Instructions</label>
+        <input id="care" name="care" type="text">
+        <span class="field-error">Care instructions are required.</span>
+      </div>
+      <div class="image-editor" data-field="images">
+        <div class="image-drop" id="dropZone">
+          <strong>Upload Images</strong>
+          <span>Drag files here or choose images from this device.</span>
+          <input class="image-input" id="imageInput" type="file" accept="image/*" multiple>
+        </div>
+        <div class="image-list" id="imageList"></div>
+        <div class="image-error" id="imageError">At least one product image is required.</div>
+      </div>
+    </div>
+
+    <div class="form-message" id="formMessage"></div>
+    <div class="form-actions">
+      <button class="ghost-action" id="cancelButton" type="button">Cancel</button>
+      <button class="primary-action" type="submit">Save Product</button>
+    </div>
+  </form>
+</main>
+
+<script src="products-data.js"></script>
+<script src="product-store.js"></script>
+<script>
+(function(){
+  const store = window.SplendyProductStore;
+  const form = document.getElementById('addForm');
+  const category = document.getElementById('category');
+  const customCategory = document.getElementById('customCategory');
+  const generatedId = document.getElementById('generatedId');
+  const dropZone = document.getElementById('dropZone');
+  const imageInput = document.getElementById('imageInput');
+  const imageList = document.getElementById('imageList');
+  const imageError = document.getElementById('imageError');
+  const formMessage = document.getElementById('formMessage');
+  const cancelButton = document.getElementById('cancelButton');
+  const requiredFields = ['name','shortDescription','longDescription','material','dimensions','color','craftsmanship','care','availability'];
+  let images = [];
+  let draggedImageIndex = null;
+
+  function buildCategoryOptions(){
+    const categories = store.categories();
+    category.innerHTML = '';
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Choose category';
+    category.appendChild(placeholder);
+
+    categories.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item;
+      option.textContent = item;
+      category.appendChild(option);
+    });
+
+    const custom = document.createElement('option');
+    custom.value = '__custom';
+    custom.textContent = 'Custom category';
+    category.appendChild(custom);
+  }
+
+  function categoryValue(){
+    return category.value === '__custom' ? customCategory.value.trim() : category.value.trim();
+  }
+
+  function uniqueId(name){
+    const base = store.slugify(name || 'product');
+    const existing = new Set(store.all().map(product => product.id));
+    let id = base;
+    let index = 2;
+
+    while (existing.has(id)) {
+      id = `${base}-${index}`;
+      index += 1;
+    }
+
+    return id;
+  }
+
+  function updateGeneratedId(){
+    generatedId.value = uniqueId(form.elements.name.value);
+  }
+
+  function collectProduct(){
+    return {
+      id: generatedId.value,
+      name: form.elements.name.value.trim(),
+      category: categoryValue(),
+      shortDescription: form.elements.shortDescription.value.trim(),
+      longDescription: form.elements.longDescription.value.trim(),
+      images: [...images],
+      material: form.elements.material.value.trim(),
+      dimensions: form.elements.dimensions.value.trim(),
+      color: form.elements.color.value.trim(),
+      craftsmanship: form.elements.craftsmanship.value.trim(),
+      care: form.elements.care.value.trim(),
+      availability: form.elements.availability.value.trim()
+    };
+  }
+
+  function clearValidation(){
+    form.querySelectorAll('.field.invalid').forEach(field => field.classList.remove('invalid'));
+    imageError.style.display = 'none';
+    formMessage.classList.remove('show');
+  }
+
+  function validateProduct(product){
+    clearValidation();
+    let valid = true;
+
+    requiredFields.forEach(field => {
+      if (!product[field]) {
+        const fieldWrap = form.querySelector(`[data-field="${field}"]`);
+        if (fieldWrap) fieldWrap.classList.add('invalid');
+        valid = false;
+      }
+    });
+
+    if (!product.category) {
+      form.querySelector('[data-field="category"]').classList.add('invalid');
+      valid = false;
+    }
+
+    if (!product.images.length) {
+      imageError.style.display = 'block';
+      valid = false;
+    }
+
+    if (!valid) showMessage('Please complete the highlighted fields before saving.');
+    return valid;
+  }
+
+  function showMessage(message){
+    formMessage.textContent = message;
+    formMessage.classList.add('show');
+  }
+
+  function renderImages(){
+    imageList.innerHTML = '';
+    images.forEach((src, index) => {
+      const item = document.createElement('div');
+      item.className = 'image-item';
+      item.draggable = true;
+
+      const preview = document.createElement('div');
+      preview.className = 'image-preview';
+      const image = document.createElement('img');
+      image.src = src;
+      image.alt = `Product image ${index + 1}`;
+      preview.appendChild(image);
+
+      const tools = document.createElement('div');
+      tools.className = 'image-tools';
+
+      const primary = document.createElement('button');
+      primary.type = 'button';
+      primary.className = index === 0 ? 'primary' : '';
+      primary.textContent = index === 0 ? 'Primary' : 'Make';
+      primary.addEventListener('click', () => makePrimary(index));
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = 'Remove';
+      remove.addEventListener('click', () => removeImage(index));
+
+      tools.append(primary, remove);
+      item.append(preview, tools);
+      item.addEventListener('dragstart', () => { draggedImageIndex = index; });
+      item.addEventListener('dragover', event => {
+        event.preventDefault();
+        item.classList.add('drag-over');
+      });
+      item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+      item.addEventListener('drop', event => {
+        event.preventDefault();
+        item.classList.remove('drag-over');
+        reorderImages(draggedImageIndex, index);
+      });
+      imageList.appendChild(item);
+    });
+    if (images.length) imageError.style.display = 'none';
+  }
+
+  function makePrimary(index){
+    if (index === 0) return;
+    const [image] = images.splice(index, 1);
+    images.unshift(image);
+    renderImages();
+  }
+
+  function removeImage(index){
+    images.splice(index, 1);
+    renderImages();
+  }
+
+  function reorderImages(from, to){
+    if (from === null || from === to || from < 0 || to < 0) return;
+    const [image] = images.splice(from, 1);
+    images.splice(to, 0, image);
+    draggedImageIndex = null;
+    renderImages();
+  }
+
+  function addFiles(files){
+    const imageFiles = [...files].filter(file => file.type.startsWith('image/'));
+    if (!imageFiles.length) return;
+
+    Promise.all(imageFiles.map(readImageFile)).then(newImages => {
+      images.push(...newImages);
+      renderImages();
+    }).catch(() => showMessage('One of the selected images could not be read. Please try a different file.'));
+  }
+
+  function readImageFile(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => compressImage(reader.result).then(resolve).catch(() => resolve(reader.result));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function compressImage(source){
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSide = 1200;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.86));
+      };
+      image.onerror = reject;
+      image.src = source;
+    });
+  }
+
+  category.addEventListener('change', () => {
+    customCategory.hidden = category.value !== '__custom';
+    if (!customCategory.hidden) customCategory.focus();
+  });
+  form.elements.name.addEventListener('input', updateGeneratedId);
+  dropZone.addEventListener('click', () => imageInput.click());
+  imageInput.addEventListener('change', event => {
+    addFiles(event.target.files);
+    imageInput.value = '';
+  });
+  dropZone.addEventListener('dragover', event => {
+    event.preventDefault();
+    dropZone.classList.add('dragging');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+  dropZone.addEventListener('drop', event => {
+    event.preventDefault();
+    dropZone.classList.remove('dragging');
+    addFiles(event.dataTransfer.files);
+  });
+  cancelButton.addEventListener('click', () => {
+    window.location.href = 'admin.html';
+  });
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const product = collectProduct();
+    if (!validateProduct(product)) return;
+
+    try {
+      store.add(product);
+      window.location.href = 'admin.html';
+    } catch (error) {
+      showMessage('The product could not be saved. If the images are very large, try fewer or smaller files.');
+    }
+  });
+
+  buildCategoryOptions();
+  updateGeneratedId();
+})();
+</script>
+</body>
+</html>
