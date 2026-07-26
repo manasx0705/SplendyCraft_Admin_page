@@ -19,7 +19,7 @@ form.addEventListener("submit", async (e) => {
 
         await signInWithEmailAndPassword(auth, email, password);
 
-        window.location.href = "dashboard.html";
+        window.location.href = "admin.html";
 
     } catch (error) {
 
