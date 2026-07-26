@@ -1,0 +1,21 @@
+{
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Splendycraft_Admin",
+        "supportEmail": "bhaleraomanas45@gmail.com",
+        "site": "splendycraft-admin-page-47a65"
+      }
+    }
+  },
+  "hosting": {
+    "public": "D:\\MANAS\\splendycraft CS final\\Admin_portal",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "site": "splendycraft-admin-page-47a65"
+  }
+}
