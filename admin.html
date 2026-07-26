@@ -304,7 +304,7 @@ body{background:var(--ivory)}
   const editMessage = document.getElementById('editMessage');
   const fields = ['name','shortDescription','longDescription','material','dimensions','color','craftsmanship','care','availability'];
 
-  let products = store.all();
+  let products = [];
   let selectedIds = new Set();
   let editingId = null;
   let editImages = [];
@@ -314,11 +314,15 @@ body{background:var(--ivory)}
     return product.images[0] || './logo.jpeg';
   }
 
-  function renderProducts(){
-    grid.innerHTML = '';
-    products.forEach(product => grid.appendChild(createCard(product)));
-    emptyState.classList.toggle('show', products.length === 0);
-  }
+async function loadProducts() {
+
+    products = await store.all();
+
+    renderProducts();
+
+    updateSelectionBar();
+
+}
 
   function createCard(product){
     const card = document.createElement('article');
@@ -372,8 +376,7 @@ body{background:var(--ivory)}
   function toggleSelection(id, selected){
     if (selected) selectedIds.add(id);
     else selectedIds.delete(id);
-    renderProducts();
-    updateSelectionBar();
+    loadProducts();
   }
 
   function updateSelectionBar(){
@@ -399,8 +402,8 @@ body{background:var(--ivory)}
     confirmModal.classList.remove('open');
   }
 
-  function removeSelectedProducts(){
-    store.remove([...selectedIds]);
+  async function removeSelectedProducts(){
+    await store.remove([...selectedIds]);
     selectedIds.clear();
     closeConfirm();
     updateSelectionBar();
@@ -642,13 +645,13 @@ body{background:var(--ivory)}
     addFiles(event.dataTransfer.files);
   });
 
-  editForm.addEventListener('submit', event => {
+  editForm.addEventListener('submit', async event => {
     event.preventDefault();
     const product = collectProduct();
     if (!validateProduct(product)) return;
 
     try {
-      store.update(editingId, product);
+      await store.update(editingId, product);
       closeEditSheet();
       clearSelection();
     } catch (error) {
