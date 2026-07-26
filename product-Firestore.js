@@ -3,11 +3,18 @@
    products-data.js is the seed catalog. Admin changes are saved in one shared
    browser-side source so every page reads the same live product list.
    ========================================================================== */
+
 import { db } from "./firebase.js";
 
+console.log(db);
+
 import {
-    collection,
-    addDoc
+    getDocs,
+query,
+where,
+updateDoc,
+deleteDoc,
+doc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 (function(){
@@ -15,16 +22,19 @@ import {
   const CHANGE_EVENT = 'splendy-products-changed';
   const channel = 'BroadcastChannel' in window ? new BroadcastChannel(CHANGE_EVENT) : null;
 
-  function seedProducts(){
-    try {
-      if (typeof SPLENDY_PRODUCTS !== 'undefined' && Array.isArray(SPLENDY_PRODUCTS)) {
-        return normalizeProducts(SPLENDY_PRODUCTS);
-      }
-    } catch (error) {
-      return [];
-    }
-    return [];
-  }
+   
+   async function all() {
+
+    const snapshot = await getDocs(productsCollection);
+
+    return snapshot.docs.map(doc => ({
+        firestoreId: doc.id,
+        ...doc.data()
+    }));
+
+}
+
+
 
   function clone(value){
     return JSON.parse(JSON.stringify(value));
@@ -63,12 +73,7 @@ async all() {
 
 }
 
-  function saveProducts(products){
-    const normalized = normalizeProducts(products);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-    announceChange(normalized);
-    return clone(normalized);
-  }
+
 
   function announceChange(products){
     const detail = { products: clone(products) };
@@ -103,9 +108,7 @@ async all() {
     return id;
   }
 
-  function all(){
-    return clone(loadProducts());
-  }
+const productsCollection = collection(db, "products");
 
 async find(id) {
 
@@ -144,10 +147,7 @@ async add(product) {
 
 }
 
-    return {
-        firestoreId: docRef.id,
-        ...normalized
-    };
+
 }
 async update(firestoreId, product) {
 
@@ -185,10 +185,6 @@ async remove(firestoreId) {
     };
   }
 
-  function reset(){
-    window.localStorage.removeItem(STORAGE_KEY);
-    announceChange(seedProducts());
-  }
 
   window.SplendyProductStore = {
     all,
