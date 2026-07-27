@@ -79,20 +79,26 @@ const productsCollection = collection(db, "products");
         };
     }
 
-    async function add(product) {
+async function add(product) {
 
-        const normalized = normalizeProduct(product);
+    console.log("STEP 1: add() called");
 
-        const docRef = await addDoc(
-            productsCollection,
-            normalized
-        );
+    const normalized = normalizeProduct(product);
 
-        return {
-            firestoreId: docRef.id,
-            ...normalized
-        };
-    }
+    console.log("STEP 2:", normalized);
+
+    const docRef = await addDoc(
+        productsCollection,
+        normalized
+    );
+
+    console.log("STEP 3: Firestore ID =", docRef.id);
+
+    return {
+        firestoreId: docRef.id,
+        ...normalized
+    };
+}
 
     async function update(firestoreId, product) {
 
