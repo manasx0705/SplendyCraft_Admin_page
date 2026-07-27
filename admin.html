@@ -3,148 +3,270 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SplendyCraft Admin Portal</title>
-<meta name="description" content="Internal SplendyCraft product management portal.">
+<title>Admin — SplendyCraft</title>
 <link rel="icon" type="image/png" href="./logo.jpeg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-body{background:var(--ivory)}
-.admin-shell{min-height:100vh;padding:8.2rem 4.5rem 8rem}
-.admin-header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2rem;align-items:end;margin-bottom:2.6rem}
-.admin-kicker{font-size:0.62rem;letter-spacing:0.34em;text-transform:uppercase;color:var(--rust);margin-bottom:0.9rem}
-.admin-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2.6rem,5vw,4.4rem);font-weight:300;line-height:1.04;color:var(--dark);margin-bottom:1rem}
+/* ── ADMIN HEADER ─────────────────────────────────── */
+.admin-header{
+  padding:7.5rem 4.5rem 2.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:1.2rem;
+}
+.admin-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2rem,4vw,2.8rem);font-weight:300;
+  color:var(--dark);line-height:1.15;
+}
 .admin-title em{font-style:italic;color:var(--rust)}
-.admin-copy{max-width:620px;font-size:1rem;line-height:1.8;font-weight:300;color:var(--brown)}
-.admin-actions{display:flex;justify-content:flex-end}
-.primary-action,.ghost-action,.danger-action{
-  border:1px solid transparent;font-family:'Jost',sans-serif;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:500;
-  min-height:44px;padding:0.75rem 1.25rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:0.55rem;
-  transition:transform 0.25s,box-shadow 0.25s,background 0.25s,color 0.25s,border-color 0.25s;
+.add-btn{
+  display:inline-flex;align-items:center;gap:0.65rem;
+  padding:0.85rem 1.8rem;
+  background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+  color:var(--dark);font-family:'Jost',sans-serif;font-size:0.76rem;
+  letter-spacing:0.14em;text-transform:uppercase;font-weight:600;
+  border:none;cursor:pointer;text-decoration:none;
+  transition:all 0.35s;
+  box-shadow:0 6px 24px rgba(201,151,58,0.3);
 }
-.primary-action{background:var(--gold);border-color:var(--gold);color:var(--ivory);box-shadow:0 14px 34px rgba(201,151,58,0.28)}
-.primary-action:hover{transform:translateY(-2px);box-shadow:0 20px 42px rgba(201,151,58,0.36)}
-.ghost-action{background:rgba(253,248,240,0.72);border-color:rgba(160,69,26,0.22);color:var(--brown)}
-.ghost-action:hover{border-color:var(--gold);color:var(--rust)}
-.danger-action{background:var(--rust);border-color:var(--rust);color:var(--ivory)}
-.danger-action:hover{background:#7d3214;border-color:#7d3214}
-.admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.6rem}
+.add-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 32px rgba(201,151,58,0.45);
+}
+.add-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+/* ── PRODUCT GRID ─────────────────────────────────── */
+.admin-grid-section{padding:2rem 4.5rem 8rem;background:var(--ivory)}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2rem}
+
+/* Card (reuses .product-card classes from products.html but adds checkbox) */
 .admin-card{
-  position:relative;background:var(--cream);border:1px solid rgba(201,151,58,0.16);overflow:hidden;cursor:pointer;
-  transition:transform 0.35s cubic-bezier(0.22,1,0.36,1),box-shadow 0.35s cubic-bezier(0.22,1,0.36,1),border-color 0.25s;
+  background:var(--cream);border:1px solid rgba(201,151,58,0.14);
+  display:flex;flex-direction:column;overflow:hidden;position:relative;
+  transition:transform 0.4s cubic-bezier(0.22,1,0.36,1),box-shadow 0.4s cubic-bezier(0.22,1,0.36,1),border-color 0.4s;
 }
-.admin-card:hover{transform:translateY(-6px);box-shadow:0 20px 44px rgba(90,52,16,0.14);border-color:rgba(201,151,58,0.36)}
-.admin-card.selected{border-color:var(--rust);box-shadow:0 18px 42px rgba(160,69,26,0.18)}
-.admin-check{position:absolute;top:0.9rem;right:0.9rem;z-index:4;width:22px;height:22px;accent-color:var(--rust);cursor:pointer}
-.admin-image{height:230px;background:#EFE6D4;overflow:hidden;position:relative}
-.admin-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.55s cubic-bezier(0.22,1,0.36,1)}
-.admin-card:hover .admin-image img{transform:scale(1.06)}
-.admin-category{
-  position:absolute;left:0.85rem;top:0.85rem;background:rgba(26,18,8,0.72);color:var(--gold-pale);
-  font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.35rem 0.7rem;max-width:calc(100% - 4.2rem);
+.admin-card:hover{transform:translateY(-6px);box-shadow:0 20px 44px rgba(90,52,16,0.14);border-color:rgba(201,151,58,0.35)}
+.admin-card.selected{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.admin-card-img{width:100%;height:260px;overflow:hidden;position:relative;background:#EFE6D4}
+.admin-card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.6s cubic-bezier(0.22,1,0.36,1)}
+.admin-card:hover .admin-card-img img{transform:scale(1.06)}
+.admin-card-category{
+  position:absolute;top:0.9rem;left:0.9rem;
+  font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;
+  background:rgba(26,18,8,0.72);color:var(--gold-pale);padding:0.35rem 0.75rem;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
 }
-.admin-card-body{padding:1.35rem 1.3rem 1.55rem}
-.admin-card-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;line-height:1.18;font-weight:400;color:var(--dark);margin-bottom:0.55rem}
-.admin-card-copy{font-size:0.87rem;line-height:1.65;font-weight:300;color:var(--brown)}
-.empty-admin{display:none;text-align:center;padding:5rem 1rem;color:var(--brown)}
-.empty-admin.show{display:block}
-.empty-admin h2{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--dark);margin-bottom:0.6rem}
-.selection-bar{
-  position:fixed;left:50%;bottom:1.35rem;z-index:360;transform:translate(-50%,150%);opacity:0;pointer-events:none;
-  display:flex;align-items:center;gap:0.8rem;background:rgba(26,18,8,0.94);color:var(--ivory);padding:0.8rem;border:1px solid rgba(226,185,106,0.24);
-  box-shadow:0 24px 70px rgba(26,18,8,0.36);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  transition:transform 0.35s cubic-bezier(0.22,1,0.36,1),opacity 0.25s;max-width:calc(100vw - 2rem);
+.admin-card-body{padding:1.4rem 1.4rem 1.6rem;display:flex;flex-direction:column;flex:1}
+.admin-card-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--dark);margin-bottom:0.5rem;line-height:1.2}
+.admin-card-desc{font-size:0.85rem;line-height:1.6;font-weight:300;color:var(--brown);flex:1}
+
+/* Checkbox */
+.admin-card-check{
+  position:absolute;top:0.9rem;right:0.9rem;z-index:5;
+  width:28px;height:28px;border-radius:6px;
+  border:2px solid rgba(253,248,240,0.7);
+  background:rgba(26,18,8,0.45);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.25s;
 }
-.selection-bar.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
-.selection-count{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(253,248,240,0.74);padding:0 0.6rem;white-space:nowrap}
-.bar-button{
-  border:1px solid rgba(226,185,106,0.28);background:transparent;color:var(--ivory);min-height:40px;padding:0.65rem 1rem;
-  font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:all 0.24s;
+.admin-card-check:hover{border-color:var(--gold-lt);background:rgba(26,18,8,0.65)}
+.admin-card-check.checked{background:var(--gold);border-color:var(--gold)}
+.admin-card-check svg{width:16px;height:16px;stroke:var(--ivory);stroke-width:2.5;fill:none;opacity:0;transition:opacity 0.2s}
+.admin-card-check.checked svg{opacity:1}
+
+/* ── FLOATING ACTION BAR ──────────────────────────── */
+.action-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:rgba(26,18,8,0.92);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:1px solid rgba(201,151,58,0.2);
+  padding:1.1rem 4.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  transform:translateY(100%);
+  transition:transform 0.4s cubic-bezier(0.22,1,0.36,1);
 }
-.bar-button:hover{border-color:var(--gold);color:var(--gold-pale)}
-.bar-button.danger{background:rgba(160,69,26,0.72);border-color:rgba(160,69,26,0.9)}
-.bar-button[hidden]{display:none}
-.modal-backdrop,.sheet-backdrop{
-  position:fixed;inset:0;background:rgba(26,18,8,0.58);z-index:420;opacity:0;pointer-events:none;transition:opacity 0.28s;
+.action-bar.visible{transform:translateY(0)}
+.action-bar-info{font-size:0.82rem;color:var(--gold-pale);font-weight:300}
+.action-bar-info strong{font-weight:600;color:var(--gold)}
+.action-bar-buttons{display:flex;gap:0.8rem}
+.action-bar-buttons button{
+  padding:0.7rem 1.5rem;font-family:'Jost',sans-serif;
+  font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;
+  border:none;cursor:pointer;transition:all 0.3s;
 }
-.modal-backdrop.open,.sheet-backdrop.open{opacity:1;pointer-events:auto}
-.confirm-modal{
-  position:fixed;left:50%;top:50%;z-index:430;transform:translate(-50%,-45%) scale(0.98);opacity:0;pointer-events:none;
-  width:min(480px,calc(100vw - 2rem));background:var(--ivory);border:1px solid rgba(201,151,58,0.24);box-shadow:0 30px 80px rgba(26,18,8,0.32);
-  padding:2rem;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1),opacity 0.22s;
+.btn-edit{background:var(--gold);color:var(--dark)}
+.btn-edit:hover{background:var(--gold-lt);box-shadow:0 4px 16px rgba(201,151,58,0.4)}
+.btn-remove{background:var(--rust);color:var(--ivory)}
+.btn-remove:hover{background:var(--rust-lt);box-shadow:0 4px 16px rgba(160,69,26,0.4)}
+.btn-cancel-bar{background:transparent;color:var(--gold-pale);border:1px solid rgba(201,151,58,0.3) !important}
+.btn-cancel-bar:hover{border-color:var(--gold) !important;color:var(--gold)}
+
+/* ── CONFIRMATION MODAL ───────────────────────────── */
+.modal-backdrop{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(26,18,8,0.7);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.35s;
 }
-.confirm-modal.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
-.confirm-modal h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--dark);margin-bottom:0.8rem}
-.confirm-modal p{font-size:0.94rem;line-height:1.75;font-weight:300;color:var(--brown);margin-bottom:1.6rem}
-.confirm-actions{display:flex;justify-content:flex-end;gap:0.75rem;flex-wrap:wrap}
-.edit-sheet{
-  position:fixed;left:50%;bottom:0;z-index:440;width:min(1120px,calc(100vw - 2rem));height:88vh;max-height:900px;
-  transform:translate(-50%,100%);background:var(--ivory);border:1px solid rgba(201,151,58,0.25);border-bottom:none;
-  box-shadow:0 -24px 90px rgba(26,18,8,0.32);transition:transform 0.42s cubic-bezier(0.22,1,0.36,1);display:flex;flex-direction:column;
+.modal-backdrop.open{opacity:1;pointer-events:auto}
+.modal-box{
+  background:var(--cream);max-width:440px;width:90%;padding:2.5rem 2.2rem;
+  box-shadow:0 30px 80px rgba(0,0,0,0.35);
+  transform:translateY(20px) scale(0.97);transition:transform 0.35s cubic-bezier(0.22,1,0.36,1);
 }
-.edit-sheet.open{transform:translate(-50%,0)}
-.sheet-header{padding:1.6rem 2rem 1.2rem;border-bottom:1px solid rgba(160,69,26,0.12);display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}
-.sheet-header h2{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--dark)}
-.sheet-header p{font-size:0.86rem;line-height:1.6;font-weight:300;color:var(--brown);margin-top:0.35rem}
-.sheet-close{width:40px;height:40px;border:1px solid rgba(160,69,26,0.2);background:transparent;color:var(--brown);font-size:1.2rem;cursor:pointer}
-.sheet-close:hover{border-color:var(--rust);color:var(--rust)}
-.product-form{padding:1.8rem 2rem 7rem;overflow:auto}
-.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem 1.3rem}
-.field{display:flex;flex-direction:column;gap:0.42rem}
-.field.full{grid-column:1/-1}
-.field label{font-size:0.64rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--rust);font-weight:500}
-.field input,.field textarea,.field select{
-  width:100%;border:1px solid rgba(160,69,26,0.22);background:rgba(255,255,255,0.64);color:var(--dark);
-  font-family:'Jost',sans-serif;font-size:0.95rem;font-weight:300;padding:0.8rem 0.85rem;transition:border-color 0.24s,box-shadow 0.24s;
+.modal-backdrop.open .modal-box{transform:translateY(0) scale(1)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:var(--dark);margin-bottom:0.8rem}
+.modal-text{font-size:0.92rem;line-height:1.7;color:var(--brown);font-weight:300;margin-bottom:2rem}
+.modal-buttons{display:flex;gap:0.8rem;justify-content:flex-end}
+.modal-buttons button{
+  padding:0.7rem 1.5rem;font-family:'Jost',sans-serif;
+  font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;
+  border:none;cursor:pointer;transition:all 0.3s;
 }
-.field textarea{min-height:110px;resize:vertical;line-height:1.55}
-.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,58,0.14)}
-.field.invalid input,.field.invalid textarea,.field.invalid select{border-color:var(--rust);box-shadow:0 0 0 3px rgba(160,69,26,0.12)}
-.field-error{display:none;font-size:0.78rem;color:var(--rust);font-weight:400}
-.field.invalid .field-error{display:block}
-.custom-category[hidden]{display:none}
-.image-editor{grid-column:1/-1;border:1px solid rgba(201,151,58,0.18);background:rgba(247,240,228,0.72);padding:1rem}
-.image-drop{
-  border:1px dashed rgba(160,69,26,0.34);background:rgba(253,248,240,0.72);padding:1.25rem;text-align:center;cursor:pointer;
-  transition:background 0.24s,border-color 0.24s;
+.modal-btn-cancel{background:transparent;color:var(--brown);border:1px solid rgba(160,69,26,0.3) !important}
+.modal-btn-cancel:hover{border-color:var(--rust) !important;color:var(--rust)}
+.modal-btn-remove{background:var(--rust);color:var(--ivory)}
+.modal-btn-remove:hover{background:var(--rust-lt);box-shadow:0 4px 16px rgba(160,69,26,0.4)}
+
+/* ── EDIT BOTTOM SHEET ────────────────────────────── */
+.sheet-backdrop{
+  position:fixed;inset:0;z-index:350;
+  background:rgba(26,18,8,0.65);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity 0.4s;
 }
-.image-drop.dragging{background:rgba(201,151,58,0.12);border-color:var(--gold)}
-.image-drop strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.28rem;font-weight:400;color:var(--dark);margin-bottom:0.35rem}
-.image-drop span{font-size:0.84rem;color:var(--brown);font-weight:300}
-.image-input{display:none}
-.image-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:0.9rem;margin-top:1rem}
-.image-item{background:var(--ivory);border:1px solid rgba(160,69,26,0.16);padding:0.55rem;cursor:grab}
-.image-item.drag-over{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,58,0.14)}
-.image-preview{height:104px;background:#EFE6D4;overflow:hidden;margin-bottom:0.55rem}
-.image-preview img{width:100%;height:100%;object-fit:cover;display:block}
-.image-tools{display:flex;gap:0.4rem}
-.image-tools button{
-  flex:1;min-height:32px;border:1px solid rgba(160,69,26,0.18);background:transparent;color:var(--brown);font-family:'Jost',sans-serif;
-  font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;
+.sheet-backdrop.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:360;
+  height:88vh;
+  background:var(--ivory);
+  box-shadow:0 -20px 80px rgba(0,0,0,0.3);
+  transform:translateY(100%);
+  transition:transform 0.5s cubic-bezier(0.22,1,0.36,1);
+  display:flex;flex-direction:column;
+  overflow:hidden;
 }
-.image-tools button:hover{border-color:var(--rust);color:var(--rust)}
-.image-tools .primary{background:rgba(201,151,58,0.13);border-color:rgba(201,151,58,0.32)}
-.form-message{display:none;margin-top:1rem;padding:0.9rem 1rem;border-left:3px solid var(--rust);background:rgba(160,69,26,0.08);font-size:0.88rem;color:var(--brown)}
-.form-message.show{display:block}
-.sheet-actions{
-  position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:flex-end;gap:0.8rem;
-  padding:1rem 2rem;background:rgba(253,248,240,0.94);border-top:1px solid rgba(160,69,26,0.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+.sheet.open{transform:translateY(0)}
+.sheet-header{
+  padding:1.5rem 2.5rem;
+  border-bottom:1px solid rgba(201,151,58,0.15);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
 }
+.sheet-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:var(--dark)}
+.sheet-title em{color:var(--rust);font-style:italic}
+.sheet-close{
+  width:36px;height:36px;border-radius:50%;border:1px solid rgba(160,69,26,0.25);
+  background:transparent;color:var(--brown);font-size:1.2rem;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;
+}
+.sheet-close:hover{border-color:var(--rust);color:var(--rust);background:rgba(160,69,26,0.06)}
+.sheet-body{flex:1;overflow-y:auto;padding:2rem 2.5rem 2rem}
+.sheet-footer{
+  padding:1.2rem 2.5rem;
+  border-top:1px solid rgba(201,151,58,0.15);
+  display:flex;gap:0.8rem;justify-content:flex-end;
+  flex-shrink:0;
+}
+
+/* ── FORM FIELDS (shared between sheet and add-product) ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.8rem 2.2rem}
+.form-group{display:flex;flex-direction:column;gap:0.45rem}
+.form-group.full{grid-column:1/-1}
+.form-label{
+  font-size:0.66rem;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--rust);font-weight:500;
+}
+.form-input,.form-textarea,.form-select{
+  width:100%;padding:0.8rem 1rem;
+  font-family:'Jost',sans-serif;font-size:0.9rem;font-weight:300;color:var(--dark);
+  border:1px solid rgba(160,69,26,0.22);background:rgba(255,255,255,0.6);
+  transition:border-color 0.25s,box-shadow 0.25s;
+}
+.form-input:focus,.form-textarea:focus,.form-select:focus{
+  outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,58,0.12);
+}
+.form-input.error,.form-textarea.error,.form-select.error{border-color:var(--rust);box-shadow:0 0 0 3px rgba(160,69,26,0.12)}
+.form-textarea{min-height:90px;resize:vertical;line-height:1.7}
+.form-textarea.tall{min-height:140px}
+.form-select{cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A3410' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.5rem;
+}
+.form-error-msg{font-size:0.74rem;color:var(--rust);font-weight:400;min-height:1em}
+
+/* ── IMAGE UPLOAD ─────────────────────────────────── */
+.img-upload-zone{
+  border:2px dashed rgba(160,69,26,0.25);padding:2rem;text-align:center;
+  cursor:pointer;transition:all 0.3s;background:rgba(255,255,255,0.4);
+  min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.6rem;
+}
+.img-upload-zone:hover,.img-upload-zone.dragover{border-color:var(--gold);background:rgba(201,151,58,0.06)}
+.img-upload-zone svg{width:32px;height:32px;stroke:var(--brown);fill:none;stroke-width:1.5;opacity:0.5}
+.img-upload-zone p{font-size:0.82rem;color:var(--brown);font-weight:300}
+.img-upload-zone p strong{font-weight:500;color:var(--rust)}
+.img-previews{display:flex;flex-wrap:wrap;gap:0.8rem;margin-top:1rem}
+.img-preview-item{
+  position:relative;width:100px;height:100px;overflow:hidden;
+  border:2px solid rgba(201,151,58,0.2);background:#EFE6D4;
+  cursor:grab;transition:border-color 0.25s;
+}
+.img-preview-item:hover{border-color:var(--gold)}
+.img-preview-item.primary{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.img-preview-item img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.img-preview-remove{
+  position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;
+  background:rgba(160,69,26,0.85);color:var(--ivory);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:0.7rem;
+  transition:background 0.2s;
+}
+.img-preview-remove:hover{background:var(--rust)}
+.img-preview-primary{
+  position:absolute;bottom:4px;left:4px;
+  font-size:0.5rem;letter-spacing:0.08em;text-transform:uppercase;
+  background:var(--gold);color:var(--dark);padding:2px 6px;font-weight:600;
+}
+.img-preview-item.dragging{opacity:0.4;border-style:dashed}
+
+/* ── BUTTONS ──────────────────────────────────────── */
+.btn-save{
+  padding:0.75rem 1.8rem;
+  background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+  color:var(--dark);font-family:'Jost',sans-serif;
+  font-size:0.74rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;
+  border:none;cursor:pointer;transition:all 0.3s;
+  box-shadow:0 4px 16px rgba(201,151,58,0.3);
+}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(201,151,58,0.45)}
+.btn-outline{
+  padding:0.75rem 1.8rem;background:transparent;
+  color:var(--brown);font-family:'Jost',sans-serif;
+  font-size:0.74rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;
+  border:1px solid rgba(160,69,26,0.3);cursor:pointer;transition:all 0.3s;
+}
+.btn-outline:hover{border-color:var(--rust);color:var(--rust)}
+
+/* ── EMPTY STATE ──────────────────────────────────── */
+.admin-empty{text-align:center;padding:5rem 1rem;color:var(--brown)}
+.admin-empty h3{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--dark);margin-bottom:0.6rem}
+.admin-empty p{font-size:0.92rem;font-weight:300}
+
+/* ── RESPONSIVE ───────────────────────────────────── */
 @media(max-width:880px){
-  .admin-shell{padding:7rem 1.5rem 7rem}
-  .admin-header{grid-template-columns:1fr;align-items:start}
-  .admin-actions{justify-content:flex-start}
-  .admin-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
-  .edit-sheet{width:100vw;height:100vh;max-height:none}
-  .form-grid{grid-template-columns:1fr}
-  .sheet-header,.product-form,.sheet-actions{padding-left:1.25rem;padding-right:1.25rem}
-  .selection-bar{left:1rem;right:1rem;transform:translateY(150%);justify-content:center;flex-wrap:wrap}
-  .selection-bar.show{transform:translateY(0)}
+  .admin-header{padding:6.5rem 1.5rem 2rem}
+  .admin-grid-section{padding:1.5rem 1.5rem 7rem}
+  .admin-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.4rem}
+  .action-bar{padding:1rem 1.5rem}
+  .sheet-header{padding:1.2rem 1.5rem}
+  .sheet-body{padding:1.5rem 1.5rem}
+  .sheet-footer{padding:1rem 1.5rem}
+  .form-grid{grid-template-columns:1fr;gap:1.4rem}
+  .sheet{height:94vh}
 }
 @media(max-width:520px){
   .admin-grid{grid-template-columns:1fr}
-  .primary-action,.ghost-action,.danger-action,.bar-button{width:100%}
-  .selection-count{width:100%;text-align:center}
 }
 </style>
 </head>
@@ -153,561 +275,466 @@ body{background:var(--ivory)}
 <nav id="nav">
   <div class="nav-logo">Splendy<em>Craft</em></div>
   <ul class="nav-links">
-    <li><a href="admin.html" class="active">Admin</a></li>
-    <li><a href="products.html">Products</a></li>
+    <li><a href="admin.html" class="active">Dashboard</a></li>
+    <li><a href="add-product.html">Add Product</a></li>
+    <li><a href="products.html" target="_blank">View Site</a></li>
   </ul>
 </nav>
 
-<main class="admin-shell">
-  <header class="admin-header">
-    <div>
-      <div class="admin-kicker">Internal Product Portal</div>
-      <h1 class="admin-title">Product <em>Dashboard</em></h1>
-      <p class="admin-copy">Manage the pieces shown in the public collection. Select a product to edit it, or select one or more products to remove them after confirmation.</p>
-    </div>
-    <div class="admin-actions">
-      <a class="primary-action" href="add-product.html">+ Add Product</a>
-    </div>
-  </header>
+<!-- ADMIN HEADER -->
+<header class="admin-header">
+  <h1 class="admin-title">Product <em>Dashboard</em></h1>
+  <a href="add-product.html" class="add-btn">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Product
+  </a>
+</header>
 
-  <section class="admin-grid" id="adminGrid" aria-live="polite"></section>
-  <section class="empty-admin" id="emptyState">
-    <h2>No products yet</h2>
-    <p>Add the first product to begin building the collection.</p>
-  </section>
-</main>
+<!-- PRODUCT GRID -->
+<section class="admin-grid-section">
+  <div class="admin-grid" id="adminGrid"></div>
+  <div class="admin-empty" id="adminEmpty" style="display:none">
+    <h3>No products yet</h3>
+    <p>Click "Add Product" above to create your first listing.</p>
+  </div>
+</section>
 
-<div class="selection-bar" id="selectionBar" aria-live="polite">
-  <span class="selection-count" id="selectionCount">0 selected</span>
-  <button class="bar-button" id="editSelected" type="button" hidden>Edit</button>
-  <button class="bar-button danger" id="removeSelected" type="button">Remove</button>
-  <button class="bar-button" id="cancelSelection" type="button">Cancel</button>
+<!-- FLOATING ACTION BAR -->
+<div class="action-bar" id="actionBar">
+  <div class="action-bar-info"><strong id="selectedCount">0</strong> product(s) selected</div>
+  <div class="action-bar-buttons">
+    <button class="btn-edit" id="btnEdit" type="button">Edit</button>
+    <button class="btn-remove" id="btnRemove" type="button">Remove</button>
+    <button class="btn-cancel-bar" id="btnCancelBar" type="button">Cancel</button>
+  </div>
 </div>
 
-<div class="modal-backdrop" id="confirmBackdrop"></div>
-<section class="confirm-modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-  <h2 id="confirmTitle">Remove selected products?</h2>
-  <p>Are you sure you want to permanently remove the selected product(s)?<br>This action cannot be undone.</p>
-  <div class="confirm-actions">
-    <button class="ghost-action" id="confirmCancel" type="button">Cancel</button>
-    <button class="danger-action" id="confirmRemove" type="button">Remove</button>
+<!-- CONFIRMATION MODAL -->
+<div class="modal-backdrop" id="removeModal">
+  <div class="modal-box">
+    <div class="modal-title">Remove Products</div>
+    <div class="modal-text">Are you sure you want to permanently remove the selected product(s)?<br>This action cannot be undone.</div>
+    <div class="modal-buttons">
+      <button class="modal-btn-cancel" id="modalCancel" type="button">Cancel</button>
+      <button class="modal-btn-remove" id="modalConfirm" type="button">Remove</button>
+    </div>
   </div>
-</section>
+</div>
 
+<!-- EDIT BOTTOM SHEET -->
 <div class="sheet-backdrop" id="sheetBackdrop"></div>
-<section class="edit-sheet" id="editSheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+<div class="sheet" id="editSheet">
   <div class="sheet-header">
-    <div>
-      <h2 id="editTitle">Edit Product</h2>
-      <p>Changes save into the shared catalog and update open product pages immediately.</p>
-    </div>
-    <button class="sheet-close" id="closeSheet" type="button" aria-label="Close edit form">x</button>
+    <div class="sheet-title">Edit <em>Product</em></div>
+    <button class="sheet-close" id="sheetClose" type="button">✕</button>
   </div>
-  <form class="product-form" id="editForm" novalidate>
-    <div class="form-grid">
-      <div class="field" data-field="name">
-        <label for="editName">Product Name</label>
-        <input id="editName" name="name" type="text" autocomplete="off">
-        <span class="field-error">Product name is required.</span>
-      </div>
-      <div class="field" data-field="category">
-        <label for="editCategory">Category</label>
-        <select id="editCategory" name="category"></select>
-        <input class="custom-category" id="editCustomCategory" type="text" placeholder="Enter custom category" hidden>
-        <span class="field-error">Category is required.</span>
-      </div>
-      <div class="field full" data-field="shortDescription">
-        <label for="editShortDescription">Short Description</label>
-        <textarea id="editShortDescription" name="shortDescription"></textarea>
-        <span class="field-error">Short description is required.</span>
-      </div>
-      <div class="field full" data-field="longDescription">
-        <label for="editLongDescription">Long Description</label>
-        <textarea id="editLongDescription" name="longDescription"></textarea>
-        <span class="field-error">Long description is required.</span>
-      </div>
-      <div class="field" data-field="material">
-        <label for="editMaterial">Material</label>
-        <input id="editMaterial" name="material" type="text">
-        <span class="field-error">Material is required.</span>
-      </div>
-      <div class="field" data-field="dimensions">
-        <label for="editDimensions">Dimensions</label>
-        <input id="editDimensions" name="dimensions" type="text">
-        <span class="field-error">Dimensions are required.</span>
-      </div>
-      <div class="field" data-field="color">
-        <label for="editColor">Color</label>
-        <input id="editColor" name="color" type="text">
-        <span class="field-error">Color is required.</span>
-      </div>
-      <div class="field" data-field="craftsmanship">
-        <label for="editCraftsmanship">Craftsmanship</label>
-        <input id="editCraftsmanship" name="craftsmanship" type="text">
-        <span class="field-error">Craftsmanship is required.</span>
-      </div>
-      <div class="field" data-field="care">
-        <label for="editCare">Care Instructions</label>
-        <input id="editCare" name="care" type="text">
-        <span class="field-error">Care instructions are required.</span>
-      </div>
-      <div class="field" data-field="availability">
-        <label for="editAvailability">Availability</label>
-        <input id="editAvailability" name="availability" type="text">
-        <span class="field-error">Availability is required.</span>
-      </div>
-      <div class="image-editor" data-field="images">
-        <div class="image-drop" id="editDropZone">
-          <strong>Upload or drop images</strong>
-          <span>Use multiple photos, reorder by dragging, and make the first image the primary thumbnail.</span>
-          <input class="image-input" id="editImageInput" type="file" accept="image/*" multiple>
-        </div>
-        <div class="image-list" id="editImageList"></div>
-        <span class="field-error" id="editImageError">At least one product image is required.</span>
-      </div>
-    </div>
-    <div class="form-message" id="editMessage"></div>
-    <div class="sheet-actions">
-      <button class="ghost-action" id="cancelEdit" type="button">Cancel</button>
-      <button class="primary-action" type="submit">Save Changes</button>
-    </div>
-  </form>
-</section>
+  <div class="sheet-body" id="sheetBody">
+    <!-- populated dynamically -->
+  </div>
+  <div class="sheet-footer">
+    <button class="btn-outline" id="sheetCancel" type="button">Cancel</button>
+    <button class="btn-save" id="sheetSave" type="button">Save Changes</button>
+  </div>
+</div>
 
-<script src="products-data.js"></script>
-<script src="product-Firestore.js"></script>
-<script>
-(function(){
-  const store = window.SplendyProductStore;
-  const grid = document.getElementById('adminGrid');
-  const emptyState = document.getElementById('emptyState');
-  const selectionBar = document.getElementById('selectionBar');
-  const selectionCount = document.getElementById('selectionCount');
-  const editSelected = document.getElementById('editSelected');
-  const removeSelected = document.getElementById('removeSelected');
-  const cancelSelection = document.getElementById('cancelSelection');
-  const confirmBackdrop = document.getElementById('confirmBackdrop');
-  const confirmModal = document.getElementById('confirmModal');
-  const confirmCancel = document.getElementById('confirmCancel');
-  const confirmRemove = document.getElementById('confirmRemove');
+<footer>
+  <div class="footer-top">
+    <div class="footer-logo">Splendy<em>Craft</em></div>
+    <div class="footer-tagline">Admin Portal</div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 SplendyCraft. All rights reserved.</span>
+    <span>Internal use only ✦</span>
+  </div>
+</footer>
+
+<script type="module">
+import { getProducts, updateProduct, deleteProduct, getCategories } from "./product-Firestore.js";
+
+(async function(){
+  /* ─── STATE ─────────────────────────────────────── */
+  let currentProducts = [];          // loaded products
+  let selected = new Set();          // set of selected product ids
+  let editingProduct = null;         // product object being edited
+  let editImageList = [];            // images array for the edit form ({ file: File, url: String } or just { url: String })
+  let dragSrcIndex = null;           // drag-reorder state
+
+  /* ─── DOM REFS ──────────────────────────────────── */
+  const grid       = document.getElementById('adminGrid');
+  const emptyState = document.getElementById('adminEmpty');
+  const actionBar  = document.getElementById('actionBar');
+  const btnEdit    = document.getElementById('btnEdit');
+  const btnRemove  = document.getElementById('btnRemove');
+  const btnCancel  = document.getElementById('btnCancelBar');
+  const selCount   = document.getElementById('selectedCount');
+  const removeModal = document.getElementById('removeModal');
+  const modalCancel = document.getElementById('modalCancel');
+  const modalConfirm = document.getElementById('modalConfirm');
   const sheetBackdrop = document.getElementById('sheetBackdrop');
-  const editSheet = document.getElementById('editSheet');
-  const closeSheet = document.getElementById('closeSheet');
-  const cancelEdit = document.getElementById('cancelEdit');
-  const editForm = document.getElementById('editForm');
-  const editCategory = document.getElementById('editCategory');
-  const editCustomCategory = document.getElementById('editCustomCategory');
-  const editDropZone = document.getElementById('editDropZone');
-  const editImageInput = document.getElementById('editImageInput');
-  const editImageList = document.getElementById('editImageList');
-  const editImageError = document.getElementById('editImageError');
-  const editMessage = document.getElementById('editMessage');
-  const fields = ['name','shortDescription','longDescription','material','dimensions','color','craftsmanship','care','availability'];
+  const editSheet     = document.getElementById('editSheet');
+  const sheetBody     = document.getElementById('sheetBody');
+  const sheetClose    = document.getElementById('sheetClose');
+  const sheetCancel   = document.getElementById('sheetCancel');
+  const sheetSave     = document.getElementById('sheetSave');
 
-  let products = [];
-  let selectedIds = new Set();
-  let editingId = null;
-  let editImages = [];
-  let draggedImageIndex = null;
-
-  function productImage(product){
-    return product.images[0] || './logo.jpeg';
+  /* ─── LOAD DATA ─────────────────────────────────── */
+  async function loadData() {
+      currentProducts = await getProducts();
+      render();
   }
 
-async function loadProducts() {
+  /* ─── RENDER GRID ───────────────────────────────── */
+  function render(){
+    grid.innerHTML = '';
+    emptyState.style.display = currentProducts.length === 0 ? 'block' : 'none';
 
-    products = await store.all();
-
-    renderProducts();
-
-    updateSelectionBar();
-
-}
-
-  function createCard(product){
-    const card = document.createElement('article');
-    card.className = 'admin-card' + (selectedIds.has(product.id) ? ' selected' : '');
-    card.tabIndex = 0;
-
-    const checkbox = document.createElement('input');
-    checkbox.className = 'admin-check';
-    checkbox.type = 'checkbox';
-    checkbox.checked = selectedIds.has(product.id);
-    checkbox.setAttribute('aria-label', `Select ${product.name}`);
-    checkbox.addEventListener('click', event => event.stopPropagation());
-    checkbox.addEventListener('change', () => toggleSelection(product.id, checkbox.checked));
-
-    const imageWrap = document.createElement('div');
-    imageWrap.className = 'admin-image';
-
-    const category = document.createElement('span');
-    category.className = 'admin-category';
-    category.textContent = product.category;
-
-    const image = document.createElement('img');
-    image.src = productImage(product);
-    image.alt = product.name;
-    image.loading = 'lazy';
-    imageWrap.append(category, image);
-
-    const body = document.createElement('div');
-    body.className = 'admin-card-body';
-
-    const title = document.createElement('h2');
-    title.className = 'admin-card-title';
-    title.textContent = product.name;
-
-    const description = document.createElement('p');
-    description.className = 'admin-card-copy';
-    description.textContent = product.shortDescription;
-
-    body.append(title, description);
-    card.append(checkbox, imageWrap, body);
-    card.addEventListener('click', () => toggleSelection(product.id, !selectedIds.has(product.id)));
-    card.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        toggleSelection(product.id, !selectedIds.has(product.id));
-      }
+    currentProducts.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'admin-card' + (selected.has(p.id) ? ' selected' : '');
+      card.innerHTML = `
+        <div class="admin-card-check${selected.has(p.id) ? ' checked' : ''}" data-id="${p.id}">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="admin-card-img">
+          <span class="admin-card-category">${esc(p.category)}</span>
+          <img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy">
+        </div>
+        <div class="admin-card-body">
+          <div class="admin-card-name">${esc(p.name)}</div>
+          <div class="admin-card-desc">${esc(p.shortDescription)}</div>
+        </div>
+      `;
+      grid.appendChild(card);
     });
-    return card;
+
+    // Bind checkbox clicks
+    grid.querySelectorAll('.admin-card-check').forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = el.dataset.id;
+        if (selected.has(id)) selected.delete(id); else selected.add(id);
+        updateSelection();
+        render();
+      });
+    });
+
+    updateSelection();
   }
 
-  function toggleSelection(id, selected){
-    if (selected) selectedIds.add(id);
-    else selectedIds.delete(id);
-    loadProducts();
-  }
-
-  function updateSelectionBar(){
-    const count = selectedIds.size;
-    selectionBar.classList.toggle('show', count > 0);
-    selectionCount.textContent = count === 1 ? '1 selected' : `${count} selected`;
-    editSelected.hidden = count !== 1;
+  /* ─── SELECTION UI ──────────────────────────────── */
+  function updateSelection(){
+    const count = selected.size;
+    selCount.textContent = count;
+    actionBar.classList.toggle('visible', count > 0);
+    btnEdit.style.display = count === 1 ? 'inline-block' : 'none';
   }
 
   function clearSelection(){
-    selectedIds.clear();
-    renderProducts();
-    updateSelectionBar();
+    selected.clear();
+    updateSelection();
+    render();
   }
 
-  function openConfirm(){
-    confirmBackdrop.classList.add('open');
-    confirmModal.classList.add('open');
-  }
+  /* ─── CANCEL ────────────────────────────────────── */
+  btnCancel.addEventListener('click', clearSelection);
 
-  function closeConfirm(){
-    confirmBackdrop.classList.remove('open');
-    confirmModal.classList.remove('open');
-  }
-
-  async function removeSelectedProducts(){
-    await store.remove([...selectedIds]);
-    selectedIds.clear();
-    closeConfirm();
-    updateSelectionBar();
-  }
-
-  function categoryValue(){
-    return editCategory.value === '__custom' ? editCustomCategory.value.trim() : editCategory.value.trim();
-  }
-
-  function buildCategoryOptions(selectedCategory){
-    const categories = [...new Set(products.map(product => product.category).filter(Boolean))].sort();
-    editCategory.innerHTML = '';
-
-    categories.forEach(category => {
-      const option = document.createElement('option');
-      option.value = category;
-      option.textContent = category;
-      editCategory.appendChild(option);
-    });
-
-    const custom = document.createElement('option');
-    custom.value = '__custom';
-    custom.textContent = 'Custom category';
-    editCategory.appendChild(custom);
-
-    if (categories.includes(selectedCategory)) {
-      editCategory.value = selectedCategory;
-      editCustomCategory.hidden = true;
-      editCustomCategory.value = '';
-    } else {
-      editCategory.value = '__custom';
-      editCustomCategory.hidden = false;
-      editCustomCategory.value = selectedCategory || '';
+  /* ─── REMOVE FLOW ───────────────────────────────── */
+  btnRemove.addEventListener('click', () => {
+    removeModal.classList.add('open');
+  });
+  modalCancel.addEventListener('click', () => {
+    removeModal.classList.remove('open');
+  });
+  modalConfirm.addEventListener('click', async () => {
+    modalConfirm.disabled = true;
+    modalConfirm.textContent = 'Removing...';
+    
+    try {
+        for (const id of selected) {
+            await deleteProduct(id);
+        }
+        await loadData();
+        removeModal.classList.remove('open');
+        clearSelection();
+    } catch (err) {
+        alert('Error removing products: ' + err.message);
+    } finally {
+        modalConfirm.disabled = false;
+        modalConfirm.textContent = 'Remove';
     }
-  }
+  });
 
-  function openEditSheet(){
-    const [id] = selectedIds;
-    const product = products.find(item => item.id === id);
-    if (!product) return;
+  /* ─── EDIT FLOW ─────────────────────────────────── */
+  btnEdit.addEventListener('click', () => {
+    const id = [...selected][0];
+    editingProduct = currentProducts.find(p => p.id === id);
+    if (!editingProduct) return;
+    
+    // Map existing images to our format (no File object)
+    editImageList = editingProduct.images.map(url => ({ url: url }));
+    openSheet();
+  });
 
-    editingId = product.id;
-    editImages = [...product.images];
-    fields.forEach(field => {
-      const input = editForm.elements[field];
-      if (input) input.value = product[field] || '';
-    });
-    buildCategoryOptions(product.category);
-    clearValidation();
-    renderEditImages();
-    editMessage.classList.remove('show');
+  function openSheet(){
+    populateEditForm();
     sheetBackdrop.classList.add('open');
     editSheet.classList.add('open');
     document.body.style.overflow = 'hidden';
-    document.getElementById('editName').focus();
   }
 
-  function closeEditSheet(){
+  function closeSheet(){
     sheetBackdrop.classList.remove('open');
     editSheet.classList.remove('open');
     document.body.style.overflow = '';
-    editingId = null;
-    editImages = [];
+    editingProduct = null;
+    editImageList = [];
   }
 
-  function collectProduct(){
-    return {
-      name: editForm.elements.name.value.trim(),
-      category: categoryValue(),
-      shortDescription: editForm.elements.shortDescription.value.trim(),
-      longDescription: editForm.elements.longDescription.value.trim(),
-      images: [...editImages],
-      material: editForm.elements.material.value.trim(),
-      dimensions: editForm.elements.dimensions.value.trim(),
-      color: editForm.elements.color.value.trim(),
-      craftsmanship: editForm.elements.craftsmanship.value.trim(),
-      care: editForm.elements.care.value.trim(),
-      availability: editForm.elements.availability.value.trim()
-    };
-  }
+  sheetClose.addEventListener('click', closeSheet);
+  sheetCancel.addEventListener('click', closeSheet);
+  sheetBackdrop.addEventListener('click', closeSheet);
 
-  function clearValidation(){
-    editForm.querySelectorAll('.field.invalid').forEach(field => field.classList.remove('invalid'));
-    editImageError.style.display = 'none';
-  }
+  /* ─── POPULATE EDIT FORM ────────────────────────── */
+  function populateEditForm(){
+    const p = editingProduct;
+    const cats = getCategories(currentProducts);
+    const catOptions = cats.map(c =>
+      `<option value="${esc(c)}"${c === p.category ? ' selected' : ''}>${esc(c)}</option>`
+    ).join('');
 
-  function validateProduct(product){
-    clearValidation();
-    let valid = true;
+    sheetBody.innerHTML = `
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Product Name</label>
+          <input class="form-input" id="editName" value="${escAttr(p.name)}">
+          <div class="form-error-msg" id="editNameErr"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="editCategory">
+            ${catOptions}
+            <option value="__custom__">+ Add custom category</option>
+          </select>
+          <input class="form-input" id="editCategoryCust" placeholder="Enter new category" style="display:none;margin-top:0.4rem">
+          <div class="form-error-msg" id="editCatErr"></div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Short Description</label>
+          <textarea class="form-textarea" id="editShortDesc">${esc(p.shortDescription)}</textarea>
+          <div class="form-error-msg" id="editShortErr"></div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Long Description</label>
+          <textarea class="form-textarea tall" id="editLongDesc">${esc(p.longDescription)}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Material</label>
+          <input class="form-input" id="editMaterial" value="${escAttr(p.material)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dimensions</label>
+          <input class="form-input" id="editDimensions" value="${escAttr(p.dimensions)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input class="form-input" id="editColor" value="${escAttr(p.color)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Availability</label>
+          <input class="form-input" id="editAvailability" value="${escAttr(p.availability)}">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Craftsmanship</label>
+          <textarea class="form-textarea" id="editCraft">${esc(p.craftsmanship)}</textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Care Instructions</label>
+          <textarea class="form-textarea" id="editCare">${esc(p.care)}</textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Images</label>
+          <div class="img-upload-zone" id="editUploadZone">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p><strong>Click to upload</strong> or drag and drop</p>
+          </div>
+          <input type="file" id="editFileInput" accept="image/*" multiple style="display:none">
+          <div class="img-previews" id="editPreviews"></div>
+        </div>
+      </div>
+    `;
 
-    fields.forEach(field => {
-      if (!product[field]) {
-        const fieldWrap = editForm.querySelector(`[data-field="${field}"]`);
-        if (fieldWrap) fieldWrap.classList.add('invalid');
-        valid = false;
-      }
+    // Category custom toggle
+    const catSel = document.getElementById('editCategory');
+    const catCust = document.getElementById('editCategoryCust');
+    catSel.addEventListener('change', () => {
+      catCust.style.display = catSel.value === '__custom__' ? 'block' : 'none';
     });
 
-    if (!product.category) {
-      editForm.querySelector('[data-field="category"]').classList.add('invalid');
-      valid = false;
-    }
-
-    if (!product.images.length) {
-      editImageError.style.display = 'block';
-      valid = false;
-    }
-
-    if (!valid) showMessage('Please complete the highlighted fields before saving.');
-    return valid;
+    // Image upload
+    setupImageUpload('editUploadZone', 'editFileInput');
+    renderEditPreviews();
   }
 
-  function showMessage(message){
-    editMessage.textContent = message;
-    editMessage.classList.add('show');
-  }
+  /* ─── IMAGE UPLOAD HELPERS ──────────────────────── */
+  function setupImageUpload(zoneId, inputId){
+    const zone = document.getElementById(zoneId);
+    const input = document.getElementById(inputId);
 
-  function renderEditImages(){
-    editImageList.innerHTML = '';
-    editImages.forEach((src, index) => {
-      const item = document.createElement('div');
-      item.className = 'image-item';
-      item.draggable = true;
-      item.dataset.index = index;
-
-      const preview = document.createElement('div');
-      preview.className = 'image-preview';
-      const image = document.createElement('img');
-      image.src = src;
-      image.alt = `Product image ${index + 1}`;
-      preview.appendChild(image);
-
-      const tools = document.createElement('div');
-      tools.className = 'image-tools';
-
-      const primary = document.createElement('button');
-      primary.type = 'button';
-      primary.className = index === 0 ? 'primary' : '';
-      primary.textContent = index === 0 ? 'Primary' : 'Make';
-      primary.addEventListener('click', () => makePrimary(index));
-
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.textContent = 'Remove';
-      remove.addEventListener('click', () => removeImage(index));
-
-      tools.append(primary, remove);
-      item.append(preview, tools);
-      item.addEventListener('dragstart', () => { draggedImageIndex = index; });
-      item.addEventListener('dragover', event => {
-        event.preventDefault();
-        item.classList.add('drag-over');
-      });
-      item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
-      item.addEventListener('drop', event => {
-        event.preventDefault();
-        item.classList.remove('drag-over');
-        reorderImages(draggedImageIndex, index);
-      });
-      editImageList.appendChild(item);
+    zone.addEventListener('click', () => input.click());
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
     });
-    editImageError.style.display = editImages.length ? 'none' : editImageError.style.display;
+    input.addEventListener('change', () => {
+      handleFiles(input.files);
+      input.value = '';
+    });
   }
 
-  function makePrimary(index){
-    if (index === 0) return;
-    const [image] = editImages.splice(index, 1);
-    editImages.unshift(image);
-    renderEditImages();
-  }
-
-  function removeImage(index){
-    editImages.splice(index, 1);
-    renderEditImages();
-  }
-
-  function reorderImages(from, to){
-    if (from === null || from === to || from < 0 || to < 0) return;
-    const [image] = editImages.splice(from, 1);
-    editImages.splice(to, 0, image);
-    draggedImageIndex = null;
-    renderEditImages();
-  }
-
-  function addFiles(files){
-    const imageFiles = [...files].filter(file => file.type.startsWith('image/'));
-    if (!imageFiles.length) return;
-
-    Promise.all(imageFiles.map(readImageFile)).then(images => {
-      editImages.push(...images);
-      renderEditImages();
-    }).catch(() => showMessage('One of the selected images could not be read. Please try a different file.'));
-  }
-
-  function readImageFile(file){
-    return new Promise((resolve, reject) => {
+  function handleFiles(files){
+    [...files].forEach(file => {
+      if (!file.type.startsWith('image/')) return;
       const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => compressImage(reader.result).then(resolve).catch(() => resolve(reader.result));
+      reader.onload = e => {
+        editImageList.push({ file: file, url: e.target.result });
+        renderEditPreviews();
+      };
       reader.readAsDataURL(file);
     });
   }
 
-  function compressImage(source){
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => {
-        const maxSide = 1200;
-        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.width * scale));
-        canvas.height = Math.max(1, Math.round(image.height * scale));
-        const context = canvas.getContext('2d');
-        context.fillStyle = '#fff';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.86));
-      };
-      image.onerror = reject;
-      image.src = source;
+  function renderEditPreviews(){
+    const container = document.getElementById('editPreviews');
+    container.innerHTML = '';
+
+    editImageList.forEach((imgObj, i) => {
+      const src = imgObj.url;
+      const item = document.createElement('div');
+      item.className = 'img-preview-item' + (i === 0 ? ' primary' : '');
+      item.draggable = true;
+      item.dataset.index = i;
+      item.innerHTML = `
+        <img src="${src}" alt="Image ${i+1}">
+        <button class="img-preview-remove" type="button" data-index="${i}">✕</button>
+        ${i === 0 ? '<span class="img-preview-primary">Primary</span>' : ''}
+      `;
+
+      // Remove
+      item.querySelector('.img-preview-remove').addEventListener('click', e => {
+        e.stopPropagation();
+        editImageList.splice(i, 1);
+        renderEditPreviews();
+      });
+
+      // Click to set as primary
+      item.addEventListener('click', () => {
+        if (i === 0) return;
+        const [moved] = editImageList.splice(i, 1);
+        editImageList.unshift(moved);
+        renderEditPreviews();
+      });
+
+      // Drag reorder
+      item.addEventListener('dragstart', e => {
+        dragSrcIndex = i;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragend', () => item.classList.remove('dragging'));
+      item.addEventListener('dragover', e => e.preventDefault());
+      item.addEventListener('drop', e => {
+        e.preventDefault();
+        if (dragSrcIndex === null || dragSrcIndex === i) return;
+        const [moved] = editImageList.splice(dragSrcIndex, 1);
+        editImageList.splice(i, 0, moved);
+        dragSrcIndex = null;
+        renderEditPreviews();
+      });
+
+      container.appendChild(item);
     });
   }
 
-  editCategory.addEventListener('change', () => {
-    editCustomCategory.hidden = editCategory.value !== '__custom';
-    if (!editCustomCategory.hidden) editCustomCategory.focus();
-  });
+  /* ─── SAVE EDIT ─────────────────────────────────── */
+  sheetSave.addEventListener('click', async () => {
+    const name = document.getElementById('editName').value.trim();
+    let category = document.getElementById('editCategory').value;
+    if (category === '__custom__') category = document.getElementById('editCategoryCust').value.trim();
+    const shortDesc = document.getElementById('editShortDesc').value.trim();
 
-  editDropZone.addEventListener('click', () => editImageInput.click());
-  editImageInput.addEventListener('change', event => addFiles(event.target.files));
-  editDropZone.addEventListener('dragover', event => {
-    event.preventDefault();
-    editDropZone.classList.add('dragging');
-  });
-  editDropZone.addEventListener('dragleave', () => editDropZone.classList.remove('dragging'));
-  editDropZone.addEventListener('drop', event => {
-    event.preventDefault();
-    editDropZone.classList.remove('dragging');
-    addFiles(event.dataTransfer.files);
-  });
+    // Validate
+    let valid = true;
+    if (!name) { showErr('editName','editNameErr','Product name is required'); valid = false; } else clearErr('editName','editNameErr');
+    if (!category) { showErr('editCategory','editCatErr','Category is required'); valid = false; } else clearErr('editCategory','editCatErr');
+    if (!shortDesc) { showErr('editShortDesc','editShortErr','Short description is required'); valid = false; } else clearErr('editShortDesc','editShortErr');
+    if (!valid) return;
 
-  editForm.addEventListener('submit', async event => {
-    event.preventDefault();
-    const product = collectProduct();
-    if (!validateProduct(product)) return;
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('category', category);
+    formData.append('shortDescription', shortDesc);
+    formData.append('longDescription', document.getElementById('editLongDesc').value.trim());
+    formData.append('material', document.getElementById('editMaterial').value.trim());
+    formData.append('dimensions', document.getElementById('editDimensions').value.trim());
+    formData.append('color', document.getElementById('editColor').value.trim());
+    formData.append('craftsmanship', document.getElementById('editCraft').value.trim());
+    formData.append('care', document.getElementById('editCare').value.trim());
+    formData.append('availability', document.getElementById('editAvailability').value.trim());
+
+    // Separate existing URLs from new Files
+    const existingImageUrls = [];
+    editImageList.forEach(imgObj => {
+        if (imgObj.file) {
+            formData.append('images', imgObj.file);
+        } else {
+            existingImageUrls.push(imgObj.url);
+        }
+    });
+    
+    // We send existingImages as a JSON string so backend can parse it and combine
+    formData.append('existingImages', JSON.stringify(existingImageUrls));
+
+    sheetSave.disabled = true;
+    sheetSave.textContent = 'Saving...';
 
     try {
-      await store.update(editingId, product);
-      closeEditSheet();
-      clearSelection();
-    } catch (error) {
-      showMessage('The product could not be saved. If the images are very large, try fewer or smaller files.');
+        await updateProduct(editingProduct.id, formData);
+        await loadData();
+        closeSheet();
+        selected.clear();
+        clearSelection();
+    } catch(err) {
+        alert('Error saving product: ' + err.message);
+    } finally {
+        sheetSave.disabled = false;
+        sheetSave.textContent = 'Save Changes';
     }
   });
 
-  editSelected.addEventListener('click', openEditSheet);
-  removeSelected.addEventListener('click', openConfirm);
-  cancelSelection.addEventListener('click', clearSelection);
-  confirmCancel.addEventListener('click', closeConfirm);
-  confirmBackdrop.addEventListener('click', closeConfirm);
-  confirmRemove.addEventListener('click', removeSelectedProducts);
-  closeSheet.addEventListener('click', closeEditSheet);
-  cancelEdit.addEventListener('click', closeEditSheet);
-  sheetBackdrop.addEventListener('click', closeEditSheet);
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') {
-      closeConfirm();
-      closeEditSheet();
-    }
-  });
+  /* ─── UTILITY ───────────────────────────────────── */
+  function esc(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function escAttr(s){ return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function toSlug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+  function showErr(inputId, errId, msg){
+    document.getElementById(inputId).classList.add('error');
+    document.getElementById(errId).textContent = msg;
+  }
+  function clearErr(inputId, errId){
+    document.getElementById(inputId).classList.remove('error');
+    document.getElementById(errId).textContent = '';
+  }
 
-  store.onChange(updatedProducts => {
-    products = updatedProducts;
-    selectedIds = new Set([...selectedIds].filter(id => products.some(product => product.id === id)));
-    renderProducts();
-    updateSelectionBar();
-  });
+  /* ─── INIT ──────────────────────────────────────── */
+  await loadData();
 
-  renderProducts();
-  updateSelectionBar();
+  // Nav scroll state
+  const navEl = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    navEl.classList.toggle('scrolled', window.scrollY > 80);
+  });
 })();
-</script>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyAKVPApIecxUANu_ceuaoqXbn7bWhkEato",
-    authDomain: "splendycraft-admin-page.firebaseapp.com",
-    projectId: "splendycraft-admin-page",
-    storageBucket: "splendycraft-admin-page.firebasestorage.app",
-    messagingSenderId: "959234187077",
-    appId: "1:959234187077:web:95878444396f439248a82c",
-    measurementId: "G-EC73SF5SJN"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
 </script>
 </body>
 </html>
