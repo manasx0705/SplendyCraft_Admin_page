@@ -144,46 +144,35 @@
   </div>
 </footer>
 
-<script src="products-data.js"></script>
-<script src="product-store.js"></script>
-<script>
-(function(){
-  const store = window.SplendyProductStore;
+<script type="module">
+import { getProducts } from "./product-Firestore.js";
+
+(async function(){
   const grid = document.getElementById('productsGrid');
   const emptyState = document.getElementById('emptyState');
   const searchInput = document.getElementById('searchInput');
   const filterRow = document.getElementById('filterRow');
 
-  let products = store.all();
+  /* Read from the shared data layer (backend API) */
+  const allProducts = await getProducts();
+
+  const categories = ['All', ...new Set(allProducts.map(p => p.category))];
   let activeCategory = 'All';
 
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('up'); });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-  function getCategories(){
-    return ['All', ...new Set(products.map(p => p.category).filter(Boolean))];
-  }
-
-  function buildFilters(){
-    const categories = getCategories();
-    if (!categories.includes(activeCategory)) activeCategory = 'All';
-
-    filterRow.innerHTML = '';
-    categories.forEach(cat => {
-      const chip = document.createElement('button');
-      chip.className = 'filter-chip' + (cat === activeCategory ? ' active' : '');
-      chip.textContent = cat;
-      chip.type = 'button';
-      chip.addEventListener('click', () => {
-        activeCategory = cat;
-        [...filterRow.children].forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        render();
-      });
-      filterRow.appendChild(chip);
+  // Build filter chips
+  categories.forEach(cat => {
+    const chip = document.createElement('button');
+    chip.className = 'filter-chip' + (cat === 'All' ? ' active' : '');
+    chip.textContent = cat;
+    chip.type = 'button';
+    chip.addEventListener('click', () => {
+      activeCategory = cat;
+      [...filterRow.children].forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      render();
     });
-  }
+    filterRow.appendChild(chip);
+  });
 
   function matchesSearch(product, query){
     if (!query) return true;
@@ -191,53 +180,29 @@
     return haystack.includes(query);
   }
 
-  function createProductCard(product){
-    const card = document.createElement('div');
-    card.className = 'product-card reveal';
-
-    const imageWrap = document.createElement('div');
-    imageWrap.className = 'product-card-img';
-
-    const category = document.createElement('span');
-    category.className = 'product-card-category';
-    category.textContent = product.category;
-
-    const image = document.createElement('img');
-    image.src = product.images[0] || './logo.jpeg';
-    image.alt = product.name;
-    image.loading = 'lazy';
-
-    imageWrap.append(category, image);
-
-    const body = document.createElement('div');
-    body.className = 'product-card-body';
-
-    const name = document.createElement('div');
-    name.className = 'product-card-name';
-    name.textContent = product.name;
-
-    const description = document.createElement('div');
-    description.className = 'product-card-desc';
-    description.textContent = product.shortDescription;
-
-    const link = document.createElement('a');
-    link.className = 'view-btn';
-    link.href = `product.html?id=${encodeURIComponent(product.id)}`;
-    link.textContent = 'View Product';
-
-    body.append(name, description, link);
-    card.append(imageWrap, body);
-    return card;
-  }
-
   function render(){
     const query = searchInput.value.trim().toLowerCase();
-    const filtered = products.filter(p =>
+    const filtered = allProducts.filter(p =>
       (activeCategory === 'All' || p.category === activeCategory) && matchesSearch(p, query)
     );
 
     grid.innerHTML = '';
-    filtered.forEach(product => grid.appendChild(createProductCard(product)));
+    filtered.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'product-card reveal';
+      card.innerHTML = `
+        <div class="product-card-img">
+          <span class="product-card-category">${p.category}</span>
+          <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
+        </div>
+        <div class="product-card-body">
+          <div class="product-card-name">${p.name}</div>
+          <div class="product-card-desc">${p.shortDescription}</div>
+          <a class="view-btn" href="product.html?id=${encodeURIComponent(p.id)}">View Product</a>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
 
     emptyState.classList.toggle('show', filtered.length === 0);
     observeReveals();
@@ -246,17 +211,15 @@
   // Instant filtering as the user types
   searchInput.addEventListener('input', render);
 
+  // Fade-in-on-scroll, same pattern used site-wide
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('up'); });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
   function observeReveals(){
     document.querySelectorAll('.reveal:not(.up)').forEach(el => obs.observe(el));
   }
 
-  store.onChange(updatedProducts => {
-    products = updatedProducts;
-    buildFilters();
-    render();
-  });
-
-  buildFilters();
   render();
   observeReveals();
 
