@@ -180,23 +180,4 @@ export {
   deleteProduct,
   getCategories
 };
-async function testFirestore() {
-    const docRef = await addDoc(productsCollection, {
-        id: "test-product",
-        name: "Test Product",
-        category: "Testing",
-        shortDescription: "Testing",
-        longDescription: "Testing Firestore",
-        images: [],
-        material: "Wood",
-        dimensions: "10 × 10 cm",
-        color: "Brown",
-        craftsmanship: "Handmade",
-        care: "Keep dry",
-        availability: "Available"
-    });
 
-    console.log("Created:", docRef.id);
-}
-
-await testFirestore();
