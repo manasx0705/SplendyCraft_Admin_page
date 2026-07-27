@@ -1,141 +1,182 @@
 import { db } from "./firebase.js";
 
-
 import {
-    collection,
-    getDocs,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    doc,
-    query,
-    where
+  collection,
+  addDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  serverTimestamp,
+  where
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 const productsCollection = collection(db, "products");
 
-(function () {
-
-    function slugify(value) {
-        const slug = String(value || "")
-            .toLowerCase()
-            .trim()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/&/g, " and ")
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "");
-
-        return slug || "product";
-    }
-
-    function normalizeProduct(product) {
-        const safe = product || {};
-
-        return {
-            id: String(safe.id || slugify(safe.name || "product")),
-            name: String(safe.name || "").trim(),
-            category: String(safe.category || "").trim(),
-            shortDescription: String(safe.shortDescription || "").trim(),
-            longDescription: String(safe.longDescription || "").trim(),
-            images: Array.isArray(safe.images)
-                ? safe.images.filter(Boolean).map(String)
-                : [],
-            material: String(safe.material || "").trim(),
-            dimensions: String(safe.dimensions || "").trim(),
-            color: String(safe.color || "").trim(),
-            craftsmanship: String(safe.craftsmanship || "").trim(),
-            care: String(safe.care || "").trim(),
-            availability: String(safe.availability || "").trim()
-        };
-    }
-
-    async function all() {
-
-        const snapshot = await getDocs(productsCollection);
-
-        return snapshot.docs.map(document => ({
-            firestoreId: document.id,
-            ...document.data()
-        }));
-    }
-
-    async function find(id) {
-
-        const q = query(
-            productsCollection,
-            where("id", "==", id)
-        );
-
-        const snapshot = await getDocs(q);
-
-        if (snapshot.empty) return null;
-
-        const document = snapshot.docs[0];
-
-        return {
-            firestoreId: document.id,
-            ...document.data()
-        };
-    }
-
-async function add(product) {
-
-    console.log("STEP 1: add() called");
-
-    const normalized = normalizeProduct(product);
-
-    console.log("STEP 2:", normalized);
-
-    const docRef = await addDoc(
-        productsCollection,
-        normalized
-    );
-
-    console.log("STEP 3: Firestore ID =", docRef.id);
-
-    return {
-        firestoreId: docRef.id,
-        ...normalized
-    };
+function toSlug(value) {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "product";
 }
 
-    async function update(firestoreId, product) {
+function getString(formData, key) {
+  return String(formData.get(key) || "").trim();
+}
 
-        await updateDoc(
-            doc(db, "products", firestoreId),
-            normalizeProduct(product)
-        );
+function normalizeProduct(product) {
+  const safe = product || {};
+
+  return {
+    id: String(safe.id || toSlug(safe.name || "product")),
+    name: String(safe.name || "").trim(),
+    category: String(safe.category || "").trim(),
+    shortDescription: String(safe.shortDescription || "").trim(),
+    longDescription: String(safe.longDescription || "").trim(),
+    images: Array.isArray(safe.images) ? safe.images.filter(Boolean).map(String) : [],
+    material: String(safe.material || "").trim(),
+    dimensions: String(safe.dimensions || "").trim(),
+    color: String(safe.color || "").trim(),
+    craftsmanship: String(safe.craftsmanship || "").trim(),
+    care: String(safe.care || "").trim(),
+    availability: String(safe.availability || "").trim()
+  };
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    if (!(file instanceof File) || file.size === 0) {
+      resolve(null);
+      return;
     }
 
-    async function remove(firestoreId) {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Could not read image file."));
+    reader.readAsDataURL(file);
+  });
+}
 
-        await deleteDoc(
-            doc(db, "products", firestoreId)
-        );
-    }
+async function getImagesFromFormData(formData) {
+  let existingImages = [];
 
-    async function categories() {
+  try {
+    existingImages = JSON.parse(formData.get("existingImages") || "[]");
+  } catch (error) {
+    existingImages = [];
+  }
 
-        const products = await all();
+  const imageFiles = formData
+    .getAll("images")
+    .filter(file => file instanceof File && file.size > 0);
 
-        return [
-            ...new Set(
-                products
-                    .map(product => product.category)
-                    .filter(Boolean)
-            )
-        ].sort();
-    }
+  const newImages = (await Promise.all(imageFiles.map(fileToDataUrl))).filter(Boolean);
 
-    window.SplendyProductStore = {
-        all,
-        find,
-        add,
-        update,
-        remove,
-        categories,
-        slugify
-    };
+  return [
+    ...existingImages.filter(Boolean).map(String),
+    ...newImages
+  ];
+}
 
-})();
+async function productFromFormData(formData, existingId) {
+  return normalizeProduct({
+    id: getString(formData, "id") || existingId || toSlug(getString(formData, "name")),
+    name: getString(formData, "name"),
+    category: getString(formData, "category"),
+    shortDescription: getString(formData, "shortDescription"),
+    longDescription: getString(formData, "longDescription"),
+    images: await getImagesFromFormData(formData),
+    material: getString(formData, "material"),
+    dimensions: getString(formData, "dimensions"),
+    color: getString(formData, "color"),
+    craftsmanship: getString(formData, "craftsmanship"),
+    care: getString(formData, "care"),
+    availability: getString(formData, "availability")
+  });
+}
+
+async function findProductDocRef(identifier) {
+  const directRef = doc(db, "products", identifier);
+  const directSnapshot = await getDoc(directRef);
+
+  if (directSnapshot.exists()) {
+    return directRef;
+  }
+
+  const productQuery = query(productsCollection, where("id", "==", identifier));
+  const querySnapshot = await getDocs(productQuery);
+
+  if (querySnapshot.empty) {
+    throw new Error(`Product "${identifier}" was not found in Firestore.`);
+  }
+
+  return querySnapshot.docs[0].ref;
+}
+
+async function getProducts() {
+  const snapshot = await getDocs(productsCollection);
+
+  return snapshot.docs.map(document => ({
+    firestoreId: document.id,
+    ...document.data()
+  }));
+}
+
+async function createProduct(formData) {
+  const product = await productFromFormData(formData);
+
+  const docRef = await addDoc(productsCollection, {
+    ...product,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+
+  return {
+    firestoreId: docRef.id,
+    ...product
+  };
+}
+
+async function updateProduct(id, formData) {
+  const productRef = await findProductDocRef(id);
+  const product = await productFromFormData(formData, id);
+
+  await updateDoc(productRef, {
+    ...product,
+    updatedAt: serverTimestamp()
+  });
+
+  return {
+    firestoreId: productRef.id,
+    ...product
+  };
+}
+
+async function deleteProduct(id) {
+  const productRef = await findProductDocRef(id);
+  await deleteDoc(productRef);
+
+  return { id };
+}
+
+function getCategories(products) {
+  if (!Array.isArray(products)) return [];
+
+  return [
+    ...new Set(products.map(product => product.category).filter(Boolean))
+  ].sort();
+}
+
+export {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getCategories
+};
