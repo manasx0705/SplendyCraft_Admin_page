@@ -199,4 +199,4 @@ async function testFirestore() {
     console.log("Created:", docRef.id);
 }
 
-testFirestore();
+await testFirestore();
