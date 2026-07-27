@@ -99,11 +99,10 @@
   </div>
 </footer>
 
-<script src="products-data.js"></script>
-<script src="product-store.js"></script>
-<script>
-(function(){
-  return;
+<script type="module">
+import { getProducts } from "./product-Firestore.js";
+
+(async function(){
   /*
     ╔══════════════════════════════════════════════════════════╗
     ║  HOW TO SET THE WHATSAPP NUMBER                          ║
@@ -117,7 +116,8 @@
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
-  const product = window.SplendyProductStore.find(id);
+  const allProducts = await getProducts();
+  const product = allProducts.find(p => p.id === id);
   const root = document.getElementById('productRoot');
 
   if (!product) {
@@ -223,165 +223,6 @@
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
   // Nav scroll state (matches index.html behavior)
-  const navEl = document.getElementById('nav');
-  window.addEventListener('scroll', () => {
-    navEl.classList.toggle('scrolled', window.scrollY > 80);
-  });
-})();
-</script>
-<script>
-(function(){
-  const store = window.SplendyProductStore;
-  const root = document.getElementById('productRoot');
-  const descriptionMeta = document.getElementById('pageDescription');
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  const WHATSAPP_NUMBER = "91XXXXXXXXXX";
-  let cleanupGallery = null;
-
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('up'); });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-  function escapeHTML(value){
-    return String(value || '').replace(/[&<>"']/g, char => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[char]));
-  }
-
-  function specRow(label, value){
-    return `<div class="spec-row"><div class="spec-label">${label}</div><div class="spec-value">${escapeHTML(value)}</div></div>`;
-  }
-
-  function imagesFor(product){
-    return product.images.length ? product.images : ['./logo.jpeg'];
-  }
-
-  function observeReveals(){
-    document.querySelectorAll('.reveal:not(.up)').forEach(element => obs.observe(element));
-  }
-
-  function clearGallery(){
-    if (cleanupGallery) cleanupGallery();
-    cleanupGallery = null;
-  }
-
-  function renderNotFound(){
-    clearGallery();
-    document.title = "Product - SplendyCraft";
-    descriptionMeta.setAttribute('content', 'Handcrafted Indian heritage decor from SplendyCraft.');
-    root.innerHTML = `
-      <div class="not-found">
-        <h1>We couldn't find that product</h1>
-        <p><a href="products.html">Browse the full collection instead &rarr;</a></p>
-      </div>
-    `;
-  }
-
-  function renderProduct(product){
-    clearGallery();
-    const images = imagesFor(product);
-    const message = `Hello SplendyCraft,\n\nI am interested in the ${product.name} shown on your website. Could you please tell me its current price and availability?\n\nThank you.`;
-    const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-
-    document.title = product.name + " - SplendyCraft";
-    descriptionMeta.setAttribute('content', product.shortDescription);
-    root.innerHTML = `
-      <div class="product-detail">
-        <div class="gallery reveal">
-          <div class="gallery-main">
-            <img id="mainImage" src="${escapeHTML(images[0])}" alt="${escapeHTML(product.name)}">
-            ${images.length > 1 ? `
-              <button class="gallery-arrow prev" id="prevBtn" aria-label="Previous image">&#10094;</button>
-              <button class="gallery-arrow next" id="nextBtn" aria-label="Next image">&#10095;</button>
-            ` : ''}
-          </div>
-          ${images.length > 1 ? `
-            <div class="gallery-thumbs" id="thumbRow">
-              ${images.map((img, index) => `
-                <div class="gallery-thumb${index === 0 ? ' active' : ''}" data-index="${index}">
-                  <img src="${escapeHTML(img)}" alt="${escapeHTML(product.name)} view ${index + 1}" loading="lazy">
-                </div>
-              `).join('')}
-            </div>
-          ` : ''}
-        </div>
-
-        <div class="product-info reveal d1">
-          <div class="eyebrow">${escapeHTML(product.category)}</div>
-          <h1>${escapeHTML(product.name)}</h1>
-          <div class="product-rule"></div>
-          <p class="product-long-desc">${escapeHTML(product.longDescription)}</p>
-          <div class="spec-list">
-            ${specRow('Material', product.material)}
-            ${specRow('Dimensions', product.dimensions)}
-            ${specRow('Color', product.color)}
-            ${specRow('Craftsmanship', product.craftsmanship)}
-            ${specRow('Care Instructions', product.care)}
-            ${specRow('Availability', product.availability)}
-          </div>
-          <a class="whatsapp-btn" href="${escapeHTML(waLink)}" target="_blank" rel="noopener">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.2-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.4 7.6 9.1 7c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1 0 1.2.9 2.4 1 2.6.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.2-.5-.3zM12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.2L2 22l4.9-1.3C8.4 21.5 10.1 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>
-            Contact on WhatsApp
-          </a>
-          <div class="whatsapp-note">Opens WhatsApp with a pre-filled message about this piece</div>
-        </div>
-      </div>
-    `;
-
-    bindGallery(images);
-    observeReveals();
-  }
-
-  function bindGallery(images){
-    if (images.length <= 1) return;
-
-    let current = 0;
-    const mainImg = document.getElementById('mainImage');
-    const thumbs = document.querySelectorAll('.gallery-thumb');
-    const mainEl = document.querySelector('.gallery-main');
-    let touchStartX = 0;
-
-    function goTo(index){
-      current = (index + images.length) % images.length;
-      mainImg.classList.add('fading');
-      setTimeout(() => {
-        mainImg.src = images[current];
-        mainImg.classList.remove('fading');
-      }, 180);
-      thumbs.forEach((thumb, thumbIndex) => thumb.classList.toggle('active', thumbIndex === current));
-    }
-
-    const keyHandler = event => {
-      if (event.key === 'ArrowLeft') goTo(current - 1);
-      if (event.key === 'ArrowRight') goTo(current + 1);
-    };
-
-    document.getElementById('prevBtn').addEventListener('click', () => goTo(current - 1));
-    document.getElementById('nextBtn').addEventListener('click', () => goTo(current + 1));
-    thumbs.forEach(thumb => thumb.addEventListener('click', () => goTo(parseInt(thumb.dataset.index, 10))));
-    mainEl.addEventListener('touchstart', event => { touchStartX = event.changedTouches[0].screenX; }, { passive: true });
-    mainEl.addEventListener('touchend', event => {
-      const delta = event.changedTouches[0].screenX - touchStartX;
-      if (Math.abs(delta) > 40) goTo(current + (delta < 0 ? 1 : -1));
-    }, { passive: true });
-    document.addEventListener('keydown', keyHandler);
-    cleanupGallery = () => document.removeEventListener('keydown', keyHandler);
-  }
-
-  function renderCurrentProduct(){
-    const product = store.find(id);
-    if (product) renderProduct(product);
-    else renderNotFound();
-  }
-
-  renderCurrentProduct();
-  store.onChange(renderCurrentProduct);
-
   const navEl = document.getElementById('nav');
   window.addEventListener('scroll', () => {
     navEl.classList.toggle('scrolled', window.scrollY > 80);
